@@ -1,0 +1,37 @@
+---
+title: "R.Python"
+author: "MLDL"
+date: "1/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Packages Needed
+library(tidyverse)
+library(reticulate)
+```
+
+```{r, include = FALSE}
+use_python("~/Users/morganldebusk-lane/miniconda3/bin/python")
+```
+
+```{r}
+test <- read_csv("test.csv")
+```
+
+```{r}
+head(test)
+```
+
+```{python}
+import pandas 
+test_py = r.test
+print(test_py)
+```
+
+
+

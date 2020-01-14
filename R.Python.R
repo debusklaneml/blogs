@@ -5,6 +5,11 @@ library(tidylog)
 library(writexl)
 library(janitor)
 
+gender_submission <- read_csv("gender_submission.csv")
+test <- read_csv("test.csv")
+train <- read_csv("train.csv")
 
+use_python("~/Users/morganldebusk-lane/miniconda3/bin/python")
 
+py_config()
 
