@@ -1,0 +1,220 @@
+---
+title: "tidymodels"
+author: "MLDL"
+date: "1/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, error= FALSE, message = FALSE}
+#required packages 
+library(tidyverse)
+library(tidymodels)
+library(janitor)
+library(readxl)
+library(tidylog)
+```
+
+###### Although this is not exactly the typical "iris" file, I'd like to keep the data presented here at least reproducible. You may find the data here: 
+https://www.kaggle.com/c/titanic/data
+
+```{r }
+test <- read_csv("test.csv") %>% clean_names() %>%
+  select(-passenger_id, -name, -ticket, -cabin) %>%
+  mutate(female = if_else(sex == "female", 1, 0)) %>%
+  select(-sex)
+```
+```{r, error= FALSE, message = FALSE}
+train <- read_csv("train.csv") %>% clean_names() %>%
+  select(-passenger_id, -name, -ticket, -cabin) %>%
+  mutate(female = if_else(sex == "female", 1, 0)) %>%
+  mutate(survived = as.factor(survived)) %>%
+  select(-sex)
+```
+
+Given that this data was downloaded already split from Kaggel, we'll will obmit this phase of the analysis. 
+
+Preprocessing: 
+
+```{r}
+titanic_recipe <- train %>%
+  recipe(survived ~ .) %>%
+  step_dummy(embarked) %>% 
+  step_corr(all_predictors()) %>%
+  step_center(all_predictors(), -all_outcomes()) %>%
+  step_scale(all_predictors(), -all_outcomes()) %>%
+  step_bagimpute(age, embarked_Q, embarked_S) %>%
+  prep()
+titanic_recipe
+```
+
+Prepping the `testing` data with the same transformations. 
+
+```{r}
+test_prepped <- titanic_recipe %>%
+  bake(test)
+```
+
+Because the training data was prepped during the making of the recipe, we just need to extract it. 
+
+```{r}
+train_prepped <- juice(titanic_recipe)
+glimpse(train_prepped)
+```
+
+logistic_reg(), rand_forest(), boost_tree()
+
+```{r}
+titanic_logr <- logistic_reg(mode = "classification") %>% 
+  set_engine("glm") %>%
+  fit(survived ~ ., data = train_prepped)
+titanic_logr
+```
+
+```{r}
+predict(titanic_logr, test_prepped)
+```
+
+```{r}
+titanic_logr %>%
+  predict(train_prepped) %>%
+  bind_cols(train_prepped) %>%
+  glimpse()
+```
+
+Model Validation 
+
+```{r}
+titanic_logr %>%
+  predict(train_prepped) %>%
+  bind_cols(train_prepped) %>%
+  metrics(truth = survived, estimate = .pred_class)
+
+```
+
+```{r}
+titanic_logr %>%
+  predict(train_prepped, type = "prob") %>%
+  glimpse()
+```
+
+```{r}
+tit_logr_probs <- titanic_logr %>%
+  predict(train_prepped, type = "prob") %>%
+  bind_cols(train_prepped)
+```
+
+Gain curves
+
+```{r}
+tit_logr_probs %>%
+  gain_curve(survived, .pred_1) %>%
+  glimpse()
+```
+
+```{r}
+tit_logr_probs %>%
+  gain_curve(survived, .pred_1) %>%
+  autoplot()
+  
+```
+
+```{r}
+tit_logr_probs %>%
+  roc_curve(survived, .pred_1) %>%
+  autoplot()
+```
+
+```{r}
+predict(titanic_logr, train_prepped, type = "prob") %>%
+  bind_cols(predict(titanic_logr, train_prepped)) %>%
+  bind_cols(select(train_prepped, survived)) %>%
+  glimpse()
+```
+
+```{r}
+predict(titanic_logr, train_prepped, type = "prob") %>%
+  bind_cols(predict(titanic_logr, train_prepped)) %>%
+  bind_cols(select(train_prepped, survived)) %>%
+  metrics(survived, .pred_1, estimate = .pred_class)
+```
+
+Now that we have a fairly simple baseline model that performs pretty well, lets jump into some more complicated models. 
+
+Random Forest Models
+
+Using the same data as before, we'll focus on the training data here. 
+
+```{r}
+titanic_rf <- rand_forest(trees = 100, mode = "classification") %>%
+  set_engine("randomForest") %>%
+  fit(survived ~ ., data = train_prepped)
+
+titanic_rf
+```
+
+Model validation
+
+```{r}
+titanic_rf %>%
+  predict(train_prepped) %>%
+  bind_cols(train_prepped) %>%
+  metrics(truth = survived, estimate = .pred_class)
+```
+
+```{r}
+tit_rf_probs <- titanic_rf %>%
+  predict(train_prepped, type = "prob") %>%
+  bind_cols(train_prepped)
+
+tit_rf_probs %>%
+  roc_curve(survived, .pred_1) %>%
+  autoplot()
+```
+
+```{r}
+predict(titanic_rf, train_prepped, type = "prob") %>%
+  bind_cols(predict(titanic_rf, train_prepped)) %>%
+  bind_cols(select(train_prepped, survived)) %>%
+  metrics(survived, .pred_1, estimate = .pred_class)
+```
+
+Clearly.... a bit better. 
+
+Let's not look at how well xgboost does. 
+
+```{r}
+titanic_xg <- boost_tree(mode = "classification", trees = 20) %>%
+  set_engine("xgboost") %>%
+  fit(survived ~ ., data = train_prepped)
+
+titanic_xg
+```
+
+```{r}
+titanic_xg %>%
+  predict(train_prepped) %>%
+  bind_cols(train_prepped) %>%
+  metrics(truth = survived, estimate = .pred_class)
+```
+
+```{r}
+tit_xg_probs <- titanic_xg %>%
+  predict(train_prepped, type = "prob") %>%
+  bind_cols(train_prepped)
+
+tit_xg_probs %>%
+  roc_curve(survived, .pred_1) %>%
+  autoplot()
+```
+
+```{r}
+predict(titanic_xg, train_prepped, type = "prob") %>%
+  bind_cols(predict(titanic_xg, train_prepped)) %>%
+  bind_cols(select(train_prepped, survived)) %>%
+  metrics(survived, .pred_1, estimate = .pred_class)
+```
+
