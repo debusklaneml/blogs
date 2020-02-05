@@ -9,27 +9,74 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+First, I am an R enthusiest to the core. Although, admittedly, this was likely a result of finding the limits of Stata while in graduate school, my love for code has been around for a long while. 
+
+Much of my work (unfortunately not all... I still have to wrangle pivot tables in Excel and develop the occasional Tableau dashboard) these days is directly in R. I wrangle data, produce reports, iterrate various predictive models, and mostly train and employ a series of ML models for pure predictive purposes in a fairly R centric workflow. 
+
+Nevertheless, I'm alwaysing trying to find connections to engrain what I've learned in other areas with what I know and love to be within R. 
+
+For this example, and because a large bulk of many data scientists job is to wrangle data, I'll be doing a fairly simple EDA example between R and Python using the `reticulate` package and rmarkdown. 
+
+This tutorial, if you will, will hopefully provide all that you need to get this up and running on your machine. I am, however, assuming you have a fully functional python install (and R.... obviously). 
+
+Let's get started. 
+
+First, we'll need two packages.  {[tidyverse](https://www.tidyverse.org)}, which will employ our R code, and the {[reticulate](https://rstudio.github.io/reticulate/)} package. 
+
+You may find reticulate on CRAN. Also, our data today will comes from the famous Ames Housing pricing data, which can be found in their {AmesHousing} package. Well be using the processed version of the data. 
+
+```{r message = FALSE}
 #Packages Needed
 library(tidyverse)
 library(reticulate)
+library(AmesHousing)
 ```
+
+Next, we need to configure how R knows where to employ python. First, lets see what options we have with the `py_config()` function from the reticulate package. 
+
+```{r}
+py_config()
+```
+
+Understanding which python I typically use, I need to tell R to use the miniconda3 version. For my set up, I simply copied the file path provided in the above output into the `use_python` command. 
+
 
 ```{r, include = FALSE}
 use_python("~/Users/morganldebusk-lane/miniconda3/bin/python")
 ```
 
-```{r}
-test <- read_csv("test.csv")
-```
+As far as I'm aware, that is all that is required to get things up and running. Lets give things a try. 
+
+Today's data set if from the fairly simple, yet popular AMES housing prices dataset. 
+
 
 ```{r}
-head(test)
+ames_prices <- ames_raw %>%
+  #we only need a handful of variables for this example
+  select(`Lot Frontage`:`Lot Shape`)
 ```
+
+Now that we have our data, one of the first things I always do, and simply because I dont like to think too much about variable names, I put them all to lowercase and snakecase. This saves me a ton of time later on when I'm trying to write out variables and dont have to remember their peculiar case issues. 
+
+In R, this calls for the famous {janitor} package and their `clean_names()` function that makes all column names lowercase and snake case. It does a whole bunch of other things automatically... like rename columns that started with a number into one that starts with a letter, etc. It's super useful. 
+
+```{r}
+ames_prices_clean_names <- ames_prices %>% 
+  janitor::clean_names()
+```
+
+
+
+```{r}
+head(ames_prices_clean_names, 5)
+```
+
+Using the original object 'ames_prices' we'll use python to make all column names lowercase and snakecase. 
+
 
 ```{python}
 import pandas 
-test_py = r.test
+test_py = r.ames_prices
 print(test_py)
 ```
 

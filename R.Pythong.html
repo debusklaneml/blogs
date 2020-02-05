@@ -369,59 +369,69 @@ summary {
 </div>
 
 
+<p>First, I am an R enthusiest to the core. Although, admittedly, this was likely a result of finding the limits of Stata while in graduate school, my love for code has been around for a long while.</p>
+<p>Much of my work (unfortunately not all… I still have to wrangle pivot tables in Excel and develop the occasional Tableau dashboard) these days is directly in R. I wrangle data, produce reports, iterrate various predictive models, and mostly train and employ a series of ML models for pure predictive purposes in a fairly R centric workflow.</p>
+<p>Nevertheless, I’m alwaysing trying to find connections to engrain what I’ve learned in other areas with what I know and love to be within R.</p>
+<p>For this example, and because a large bulk of many data scientists job is to wrangle data, I’ll be doing a fairly simple EDA example between R and Python using the <code>reticulate</code> package and rmarkdown.</p>
+<p>This tutorial, if you will, will hopefully provide all that you need to get this up and running on your machine. I am, however, assuming you have a fully functional python install (and R…. obviously).</p>
+<p>Let’s get started.</p>
+<p>First, we’ll need two packages. {<a href="https://www.tidyverse.org">tidyverse</a>}, which will employ our R code, and the {<a href="https://rstudio.github.io/reticulate/">reticulate</a>} package.</p>
+<p>You may find reticulate on CRAN. Also, our data today will comes from the famous Ames Housing pricing data, which can be found in their {AmesHousing} package. Well be using the processed version of the data.</p>
 <pre class="r"><code>#Packages Needed
-library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
-<pre><code>## ✓ ggplot2 3.2.1     ✓ purrr   0.3.3
-## ✓ tibble  2.1.3     ✓ dplyr   0.8.3
-## ✓ tidyr   1.0.0     ✓ stringr 1.4.0
-## ✓ readr   1.3.1     ✓ forcats 0.4.0</code></pre>
-<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(reticulate)</code></pre>
-<pre class="r"><code>test &lt;- read_csv(&quot;test.csv&quot;)</code></pre>
-<pre><code>## Parsed with column specification:
-## cols(
-##   PassengerId = col_double(),
-##   Pclass = col_double(),
-##   Name = col_character(),
-##   Sex = col_character(),
-##   Age = col_double(),
-##   SibSp = col_double(),
-##   Parch = col_double(),
-##   Ticket = col_character(),
-##   Fare = col_double(),
-##   Cabin = col_character(),
-##   Embarked = col_character()
-## )</code></pre>
-<pre class="r"><code>head(test)</code></pre>
-<pre><code>## # A tibble: 6 x 11
-##   PassengerId Pclass Name    Sex     Age SibSp Parch Ticket  Fare Cabin Embarked
-##         &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;   
-## 1         892      3 Kelly,… male   34.5     0     0 330911  7.83 &lt;NA&gt;  Q       
-## 2         893      3 Wilkes… fema…  47       1     0 363272  7    &lt;NA&gt;  S       
-## 3         894      2 Myles,… male   62       0     0 240276  9.69 &lt;NA&gt;  Q       
-## 4         895      3 Wirz, … male   27       0     0 315154  8.66 &lt;NA&gt;  S       
-## 5         896      3 Hirvon… fema…  22       1     1 31012… 12.3  &lt;NA&gt;  S       
-## 6         897      3 Svenss… male   14       0     0 7538    9.22 &lt;NA&gt;  S</code></pre>
-<pre class="python"><code>import pandas 
-test_py = r.test
-print(test_py)</code></pre>
-<pre><code>##      PassengerId  Pclass  ... Cabin Embarked
-## 0          892.0     3.0  ...    NA        Q
-## 1          893.0     3.0  ...    NA        S
-## 2          894.0     2.0  ...    NA        Q
-## 3          895.0     3.0  ...    NA        S
-## 4          896.0     3.0  ...    NA        S
-## ..           ...     ...  ...   ...      ...
-## 413       1305.0     3.0  ...    NA        S
-## 414       1306.0     1.0  ...  C105        C
-## 415       1307.0     3.0  ...    NA        S
-## 416       1308.0     3.0  ...    NA        S
-## 417       1309.0     3.0  ...    NA        C
+library(tidyverse)
+library(reticulate)
+library(AmesHousing)</code></pre>
+<p>Next, we need to configure how R knows where to employ python. First, lets see what options we have with the <code>py_config()</code> function from the reticulate package.</p>
+<pre class="r"><code>py_config()</code></pre>
+<pre><code>## python:         /usr/local/bin/python3
+## libpython:      /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/config-3.8-darwin/libpython3.8.dylib
+## pythonhome:     /Library/Frameworks/Python.framework/Versions/3.8:/Library/Frameworks/Python.framework/Versions/3.8
+## version:        3.8.0 (v3.8.0:fa919fdf25, Oct 14 2019, 10:23:27)  [Clang 6.0 (clang-600.0.57)]
+## numpy:          /Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages/numpy
+## numpy_version:  1.17.4
 ## 
-## [418 rows x 11 columns]</code></pre>
+## python versions found: 
+##  /usr/local/bin/python3
+##  /usr/bin/python3
+##  /usr/bin/python
+##  /Users/morganldebusk-lane/miniconda3/bin/python</code></pre>
+<p>Understanding which python I typically use, I need to tell R to use the miniconda3 version. For my set up, I simply copied the file path provided in the above output into the <code>use_python</code> command.</p>
+<p>As far as I’m aware, that is all that is required to get things up and running. Lets give things a try.</p>
+<p>Today’s data set if from the fairly simple, yet popular AMES housing prices dataset.</p>
+<pre class="r"><code>ames_prices &lt;- ames_raw %&gt;%
+  #we only need a handful of variables for this example
+  select(`Lot Frontage`:`Lot Shape`)</code></pre>
+<p>Now that we have our data, one of the first things I always do, and simply because I dont like to think too much about variable names, I put them all to lowercase and snakecase. This saves me a ton of time later on when I’m trying to write out variables and dont have to remember their peculiar case issues.</p>
+<p>In R, this calls for the famous {janitor} package and their <code>clean_names()</code> function that makes all column names lowercase and snake case. It does a whole bunch of other things automatically… like rename columns that started with a number into one that starts with a letter, etc. It’s super useful.</p>
+<pre class="r"><code>ames_prices_clean_names &lt;- ames_prices %&gt;% 
+  janitor::clean_names()</code></pre>
+<pre class="r"><code>head(ames_prices_clean_names, 5)</code></pre>
+<pre><code>## # A tibble: 5 x 5
+##   lot_frontage lot_area street alley lot_shape
+##          &lt;int&gt;    &lt;int&gt; &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt;    
+## 1          141    31770 Pave   &lt;NA&gt;  IR1      
+## 2           80    11622 Pave   &lt;NA&gt;  Reg      
+## 3           81    14267 Pave   &lt;NA&gt;  IR1      
+## 4           93    11160 Pave   &lt;NA&gt;  Reg      
+## 5           74    13830 Pave   &lt;NA&gt;  IR1</code></pre>
+<p>Using the original object ‘ames_prices’ we’ll use python to make all column names lowercase and snakecase.</p>
+<pre class="python"><code>import pandas 
+test_py = r.ames_prices
+print(test_py)</code></pre>
+<pre><code>##       Lot Frontage  Lot Area Street Alley Lot Shape
+## 0              141     31770   Pave    NA       IR1
+## 1               80     11622   Pave    NA       Reg
+## 2               81     14267   Pave    NA       IR1
+## 3               93     11160   Pave    NA       Reg
+## 4               74     13830   Pave    NA       IR1
+## ...            ...       ...    ...   ...       ...
+## 2925            37      7937   Pave    NA       IR1
+## 2926   -2147483648      8885   Pave    NA       IR1
+## 2927            62     10441   Pave    NA       Reg
+## 2928            77     10010   Pave    NA       Reg
+## 2929            74      9627   Pave    NA       Reg
+## 
+## [2930 rows x 5 columns]</code></pre>
 
 
 
