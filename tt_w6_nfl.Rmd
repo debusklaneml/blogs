@@ -126,3 +126,11 @@ chiefs_gg <- chiefs %>%
 chiefs_gg
 ```
 
+```{r}
+gg1 <- att_games_ha %>%
+  filter(away_team_ind != 9999) %>%
+  group_by(year, week, away_team_ind) %>%
+  summarize(average_att = mean(weekly_attendance)) %>%
+  ggplot(aes())
+```
+
