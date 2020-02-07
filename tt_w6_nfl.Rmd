@@ -10,7 +10,9 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+knitr::opts_chunk$set(cache = TRUE, warning = FALSE, message = FALSE, 
+                      echo = TRUE, dpi = 300, cache.lazy = FALSE,
+                      tidy = "styler", fig.width = 8, fig.height = 7)
 ```
 
 ```{r, results = FALSE, message=FALSE}
@@ -126,11 +128,42 @@ chiefs_gg <- chiefs %>%
 chiefs_gg
 ```
 
-```{r}
+Well, that's interesting... but I wonder if the obvious dip in at home attendance between ~2007 and ~2013 is simply a localized artifact to the Chiefs. 
+
+```{r, fig.width=12, fig.height=12}
+
+all_gg <- att_games_ha %>%
+  filter(away_team_ind != 9999) %>%
+  group_by(t_name, year, away_team_ind) %>%
+  summarize(average_att = mean(weekly_attendance)) %>% ungroup() %>%
+  ggplot(aes(x = year, y = average_att, color = as.factor(away_team_ind))) +
+  geom_point() + 
+  facet_wrap(~t_name) + 
+  theme(legend.position = "top")
+
+all_gg
+```
+
+So obviously, each team has a fairly unique pattern of attendance, especially between home and away games. You can also see where some teams got a new stadium that pushed attendance up, such as the Dallas Cowboys. 
+
+```{r, ,fig.width=12,  fig.height=12}
 gg1 <- att_games_ha %>%
   filter(away_team_ind != 9999) %>%
-  group_by(year, week, away_team_ind) %>%
+  group_by(t_name, year, week, away_team_ind) %>%
   summarize(average_att = mean(weekly_attendance)) %>%
-  ggplot(aes())
+  ggplot(aes(t_name, average_att, color = as.factor(away_team_ind))) +
+  geom_boxplot(outlier.alpha = .5) + 
+  coord_flip() + 
+  theme(legend.position = "top")
+
+gg1
+```
+
+Although this is really interesting, what I think would be interesting to look at, would be how these teams connect between each other. Given the dataset being such, I'll examine a social network analysis based on attendance between the two teams over time to see how the structure of the teamed network changes. 
+
+This will take a bit of work to get things set up. 
+
+```{r}
+library(igraph)
 ```
 
