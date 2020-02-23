@@ -146,7 +146,7 @@ all_gg
 
 So obviously, each team has a fairly unique pattern of attendance, especially between home and away games. You can also see where some teams got a new stadium that pushed attendance up, such as the Dallas Cowboys. 
 
-```{r, ,fig.width=12,  fig.height=12}
+```{r, fig.width=12,  fig.height=12}
 gg1 <- att_games_ha %>%
   filter(away_team_ind != 9999) %>%
   group_by(t_name, year, week, away_team_ind) %>%
@@ -159,11 +159,106 @@ gg1 <- att_games_ha %>%
 gg1
 ```
 
-Although this is really interesting, what I think would be interesting to look at, would be how these teams connect between each other. Given the dataset being such, I'll examine a social network analysis based on attendance between the two teams over time to see how the structure of the teamed network changes. 
+Although both the previous graph do not exhibit any clear reoccuring or dicernable trends, it makes me wonder what the relationship between home attendance and season performance is. Said another way, does a strong home team crowd during the first half of the season, relate to eventual success? 
 
-This will take a bit of work to get things set up. 
+Lets take a look. 
 
 ```{r}
-library(igraph)
+standings <- standings %>%
+  mutate(t_name = str_c(team, team_name, sep = " "))
+  
+predict_1 <- att_games_ha %>%
+  filter(!is.na(away_team),
+         week < 8) %>%
+  group_by(year, t_name) %>%
+  summarize(avg.att = mean(weekly_attendance)) %>% ungroup() %>%
+  left_join(standings, by = c("year", "t_name")) %>%
+  mutate(perc.win = wins/(wins+loss))
+
+cor(predict_1$avg.att, predict_1$perc.win) #this is not promissing, but lets visualize
+
 ```
+
+```{r}
+predict_1_gg <- predict_1 %>%
+  ggplot(aes(x = perc.win, y = avg.att)) + 
+  geom_point() 
+
+predict_1_gg
+```
+
+So much variability. I would assume this is because each team has different stadium sizes, and therefore the y-axis is not relative across teams. Lets see if we can control this. 
+
+Let's first create a function to normalize data within group (year, team)
+
+```{r}
+zscore <- function(m){
+  (m - mean(m)) / sd(m)
+}
+```
+
+Group it and then lets see how things relate. 
+
+```{r}
+# Full season results were used, although home and away games' attendance will count for more than one team at a time. 
+
+predict_2 <- att_games_ha %>%
+  # filter(!is.na(away_team)) %>%
+  filter(!is.na(weekly_attendance)) %>%
+  group_by(year, t_name) %>%
+  mutate(avg.att = zscore(weekly_attendance)) %>% ungroup() %>%
+  left_join(standings, by = c("year", "t_name")) %>%
+  mutate(perc.win = wins/(wins+loss)) %>%
+  # filter(week < 8) %>%
+  # filter(week > 4 & week < 10) %>% #trying out different perspectives
+  # filter(week > 8) %>%
+  group_by(year, t_name, perc.win) %>%
+  summarize(avg_first_half = mean(avg.att)) %>% ungroup()
+```
+Lets take a look now.
+
+```{r}
+predict_2_gg <- predict_2 %>%
+  ggplot(aes(x = perc.win, y = avg_first_half)) + 
+  geom_point() + 
+  geom_smooth(method = "auto")
+  
+  # geom_point() + 
+  # geom_smooth(stat = "smooth")
+
+predict_2_gg
+```
+
+Although first half season attendance does not seem to be extensively predictive, perhaps there are other indicators that could help improve this model. Lets look a bit deeper here. 
+
+```{r}
+cor(predict_2$perc.win, predict_2$avg_first_half, method = "pearson")
+
+
+lm1 <- lm(data = predict_2, perc.win ~ avg_first_half)
+broom::tidy(lm1)
+broom::glance(lm1)
+```
+
+```{r}
+lm2 <- lm(data = predict_2, perc.win ~ year + avg_first_half + year*avg_first_half)
+broom::tidy(lm2)
+broom::glance(lm2)
+```
+
+```{r}
+predict_3 <- predict_2 %>%
+  left_join(standings, by = c("year", "t_name"))
+
+lm3 <- lm(data = predict_3, perc.win ~ year + avg_first_half + points_for)
+broom::tidy(lm3)
+broom::glance(lm3)
+```
+
+
+
+
+
+
+
 

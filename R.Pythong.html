@@ -380,7 +380,19 @@ summary {
 <pre class="r"><code>#Packages Needed
 library(tidyverse)
 library(reticulate)
-library(AmesHousing)</code></pre>
+library(AmesHousing)
+
+# create a new environment 
+# conda_create(&quot;r-reticulate&quot;)
+
+# install janitor
+
+# conda_list()
+# use_condaenv(condaenv = &quot;r-reticulate&quot;)
+# use_virtualenv(&quot;/Users/morganldebusk-lane/miniconda3/envs/r-reticulate/&quot;, required = TRUE)
+# pf &lt;- import(&quot;pandas&quot;)
+# py_discover_config()
+# matplotlib &lt;- import(&quot;matplotlib&quot;)</code></pre>
 <p>Next, we need to configure how R knows where to employ python. First, lets see what options we have with the <code>py_config()</code> function from the reticulate package.</p>
 <pre class="r"><code>py_config()</code></pre>
 <pre><code>## python:         /usr/local/bin/python3
@@ -391,11 +403,13 @@ library(AmesHousing)</code></pre>
 ## numpy_version:  1.17.4
 ## 
 ## python versions found: 
-##  /usr/local/bin/python3
+##  /Users/morganldebusk-lane/miniconda3/envs/r-reticulate/bin/python
 ##  /usr/bin/python3
+##  /usr/local/bin/python3
 ##  /usr/bin/python
 ##  /Users/morganldebusk-lane/miniconda3/bin/python</code></pre>
 <p>Understanding which python I typically use, I need to tell R to use the miniconda3 version. For my set up, I simply copied the file path provided in the above output into the <code>use_python</code> command.</p>
+<pre class="r"><code>use_condaenv(condaenv = &quot;r-reticulate&quot;)</code></pre>
 <p>As far as I’m aware, that is all that is required to get things up and running. Lets give things a try.</p>
 <p>Today’s data set if from the fairly simple, yet popular AMES housing prices dataset.</p>
 <pre class="r"><code>ames_prices &lt;- ames_raw %&gt;%
@@ -415,9 +429,10 @@ library(AmesHousing)</code></pre>
 ## 4           93    11160 Pave   &lt;NA&gt;  Reg      
 ## 5           74    13830 Pave   &lt;NA&gt;  IR1</code></pre>
 <p>Using the original object ‘ames_prices’ we’ll use python to make all column names lowercase and snakecase.</p>
-<pre class="python"><code>import pandas 
-test_py = r.ames_prices
-print(test_py)</code></pre>
+<pre class="r"><code>py_ames &lt;- r_to_py(ames_prices)</code></pre>
+<pre class="python"><code>import pandas
+py_ames_prices = r.ames_prices
+print(r.ames_prices)</code></pre>
 <pre><code>##       Lot Frontage  Lot Area Street Alley Lot Shape
 ## 0              141     31770   Pave    NA       IR1
 ## 1               80     11622   Pave    NA       Reg
@@ -432,6 +447,45 @@ print(test_py)</code></pre>
 ## 2929            74      9627   Pave    NA       Reg
 ## 
 ## [2930 rows x 5 columns]</code></pre>
+<pre class="python"><code>py_ames_prices.columns = py_ames_prices.columns.str.lower().str.replace(' ', '_')
+
+print(py_ames_prices)</code></pre>
+<pre><code>##       lot_frontage  lot_area street alley lot_shape
+## 0              141     31770   Pave    NA       IR1
+## 1               80     11622   Pave    NA       Reg
+## 2               81     14267   Pave    NA       IR1
+## 3               93     11160   Pave    NA       Reg
+## 4               74     13830   Pave    NA       IR1
+## ...            ...       ...    ...   ...       ...
+## 2925            37      7937   Pave    NA       IR1
+## 2926   -2147483648      8885   Pave    NA       IR1
+## 2927            62     10441   Pave    NA       Reg
+## 2928            77     10010   Pave    NA       Reg
+## 2929            74      9627   Pave    NA       Reg
+## 
+## [2930 rows x 5 columns]</code></pre>
+<p>Now that we have that, lets do some fairly simple aggregations to get to know the data better.</p>
+<p>I’d like to know the average <code>lot_frontage</code> and the different types of <code>street</code>.</p>
+<pre class="r"><code>ames_prices_clean_names %&gt;%
+  summarize(avg.lot = mean(lot_area, na.rm = TRUE))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   avg.lot
+##     &lt;dbl&gt;
+## 1  10148.</code></pre>
+<pre class="r"><code>ames_prices_clean_names %&gt;%
+  group_by(street) %&gt;% 
+  tally()</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   street     n
+##   &lt;chr&gt;  &lt;int&gt;
+## 1 Grvl      12
+## 2 Pave    2918</code></pre>
+<pre class="python"><code>py_ames_prices.lot_frontage.mean()</code></pre>
+<pre><code>## -359135432.97337884</code></pre>
+<pre class="python"><code>py_ames_prices.mean()</code></pre>
+<pre><code>## lot_frontage   -3.591354e+08
+## lot_area        1.014792e+04
+## dtype: float64</code></pre>
 
 
 

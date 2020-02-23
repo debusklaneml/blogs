@@ -1,0 +1,81 @@
+---
+title: "NLF_SN"
+author: "MLDL"
+date: "2/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(igraph)
+
+edges <- att_games_ha %>%
+  group_by(year, home_team_name, away_team_name) %>%
+  summarize(avg_att = mean(weekly_attendance)) %>%
+  ungroup() %>% 
+  filter(year == 2015) %>%
+  select(home_team_name, away_team_name, avg_att) %>%
+  mutate(weight = avg_att,
+         from = home_team_name,
+         to = away_team_name) %>%
+  filter(!is.na(home_team_name)) %>%
+  select(from, to, weight)
+
+nodes <- att_games_ha %>%
+  select(home_team_name) %>%
+  distinct() %>%
+  filter(!is.na(home_team_name)) %>%
+  mutate(id = 1:n())
+
+social_network <- simplify(graph_from_data_frame(d = edges, vertices = nodes, directed = F))
+social_network <- graph_from_data_frame(d = edges, vertices = nodes, directed = F)
+social_network
+            
+```
+
+```{r, fig.width=8,  fig.height=8 }
+#Try visNetwork: https://kateto.net/network-visualization
+library(visNetwork) 
+
+# Make true numeric edge and node dataframes
+nodes_df <- data.frame(id = c(1:vcount(social_network)), teams = V(social_network)$name)
+edges_df <- as.data.frame(get.edges(social_network, c(1:ecount(social_network))))
+edge_att <- data.frame(weight = E(social_network)$weight)
+nodes_att <- data.frame(ID = c(1:vcount(social_network)), teams = V(social_network)$name)
+
+edges_att_df <- edges_df %>%
+  bind_cols(edge_att) %>%
+  rename(from = V1,
+         to = V2) %>%
+  mutate(value = weight/4) 
+
+  # mutate(length = weight)
+# visNetwork(nodes_df, edges_att_df)
+
+# nodes 
+# links
+
+#lets add some attributes
+vis.nodes <- nodes_df
+vis.links <- edges_att_df
+
+vis.nodes$title <- vis.nodes$teams
+
+# vis.nodes$color.background <- c("slategrey", "tomato", "gold")[nodes$media.type]
+vis.nodes$shape  <- "dot"  
+vis.nodes$shadow <- TRUE # Nodes will drop shadow
+vis.nodes$color.background <- "blue"
+vis.nodes$color.border <- "black"
+vis.nodes$color.highlight.background <- "red"
+vis.nodes$color.highlight.border <- "darkred"
+
+visNetwork(vis.nodes, vis.links, height = "500px", width = "100%") %>%
+  visEdges(shadow = TRUE, 
+           arrows = list(to = list(enabled = TRUE, scaleFactor = 1)), 
+           color = list(color = "lightblue", highlight = "red")) %>%
+  visOptions(selectedBy = "teams") %>%
+  visLayout(randomSeed = 123)
+```
