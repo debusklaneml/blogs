@@ -35,15 +35,22 @@ board <- rbind(c(9, NA, 6,8,NA, NA, 3, NA, NA),
 
 
 possible_choices <- function(board, i, j){
-  # Get the list of possible numbers at a tile, given filled in numbers
+  # Creates an all TRUE logical vector
   possible_answers <- rep(TRUE,9)
+  # Lists all known numbers from the row, column, and 3x3 cell
   selected_num <- unique(c(board[i,], board[,j], board[3*((i-1) %/% 3) + 1:3, 3*((j-1) %/% 3) + 1:3]))
+  # Removes NAs
   selected_num <- na.omit(selected_num)
+  # Changes the logical vector to FALSE for all values currently in use for the row, column, and 3x3 cell
   possible_answers[selected_num] <- FALSE
+  # Returns this logical vector for use in subsequent functions...
   return(possible_answers)
 }
 
+# The 'board' argument here provides the matrix, length 81 (9x9), to iterate through. 
+# The 'progress' argument here provides a starting value to recursively iterate through. 
 solve_sudoku <- function(board, progress = 81) {
+  # Once all cells have been assessed within the 'possible_choices' function, it stops the recursion. 
   if (progress == 0) {
     # Successfully filled in the board
     return(board)
@@ -78,5 +85,12 @@ possible_choices(sudoku_board, 1, 22)
 11 %% 4
 
 
-i <- ((50 - 1) %% 9) + 1
-j <- ((50 - 1) %/% 9) + 1
+i <- ((80 - 1) %% 9) + 1
+j <- ((80 - 1) %/% 9) + 1
+
+
+selected_num <- unique(c(board[1,], board[,1], board[3*((1-1) %/% 3) + 1:3, 3*((1-1) %/% 3) + 1:3]))
+x
+
+possible_answers[selected_num] <- FALSE
+possible_answers
