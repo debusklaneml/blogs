@@ -1,7 +1,7 @@
 library(tidyverse)
 
 
-data <- c(5,3,0,0,7,0,0,0,0,
+board <- c(5,3,0,0,7,0,0,0,0,
           6,0,0,1,9,5,0,0,0,
           0,9,8,0,0,0,0,6,0,
           8,0,0,0,6,0,0,0,3,
@@ -11,8 +11,8 @@ data <- c(5,3,0,0,7,0,0,0,0,
           0,0,0,4,1,9,0,0,5,
           0,0,0,0,8,0,0,7,9)
 
-grid <- matrix(data, nrow = 9, ncol = 9, byrow = TRUE) 
-grid[grid == 0] <- NA
+board <- matrix(board, nrow = 9, ncol = 9, byrow = TRUE) 
+board[board == 0] <- NA
 
 
 # Check here: https://gist.github.com/christlc/b2fee49627cc0a15c7f72c127239ca7e
@@ -50,6 +50,9 @@ possible_choices <- function(board, i, j){
 # The 'board' argument here provides the matrix, length 81 (9x9), to iterate through. 
 # The 'progress' argument here provides a starting value to recursively iterate through. 
 solve_sudoku <- function(board, progress = 81) {
+  if  (0 %in% board) {
+    board[board == 0] <- NA
+  } else board
   # Once all cells have been assessed within the 'possible_choices' function, it stops the recursion. 
   if (progress == 0) {
     # Successfully filled in the board
@@ -73,11 +76,11 @@ solve_sudoku <- function(board, progress = 81) {
   return(NULL)
 }
 
-solve_sudoku(sudoku_board)
+solve_sudoku(board)
 
 # -------------
 
-possible_choices(sudoku_board, 1, 22)
+possible_choices(board, 1, 7)
 
 
 ((10 - 1) %% 9) + 1
@@ -94,3 +97,8 @@ x
 
 possible_answers[selected_num] <- FALSE
 possible_answers
+
+
+if  (0 %in% board) {
+  board[board == 0] <- NA
+} else board
