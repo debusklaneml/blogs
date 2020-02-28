@@ -50,6 +50,7 @@ possible_choices <- function(board, i, j){
 # The 'board' argument here provides the matrix, length 81 (9x9), to iterate through. 
 # The 'progress' argument here provides a starting value to recursively iterate through. 
 solve_sudoku <- function(board, progress = 81) {
+  # Provision to make a matrix with 0s into NA for future processing
   if  (0 %in% board) {
     board[board == 0] <- NA
   } else board
@@ -59,16 +60,21 @@ solve_sudoku <- function(board, progress = 81) {
     return(board)
   }
   # Get the i,j coordinates
-  i <- ((progress - 1) %% 9) + 1
-  j <- ((progress - 1) %/% 9) + 1
+  # A fancy way to iterate through the coordinate numbers one by one (right to left, bottom to top)
+  i <- ((progress - 1) %% 9) + 1 
+  j <- ((progress - 1) %/% 9) + 1 
+  # If a spot is open, identifies what numbers are available `choices`
   if (is.na(board[i, j])) {
     choices <- which(possible_choices(board, i, j))
   } else{
     choices <- c(board[i, j])
   }
+  # Try each possible choice, until all the requirements of the two functions are satisfied. 
   for (k in choices) {
     board[i, j] <- k
+    # recursion
     answer <- solve_sudoku(board, progress - 1)
+    # If all possible positions have been completed, simply return the answer. 
     if (!is.null(answer)) {
       return(answer)
     }
@@ -80,25 +86,9 @@ solve_sudoku(board)
 
 # -------------
 
-possible_choices(board, 1, 7)
+i <- ((70 - 1) %% 9) + 1
+69/9
 
-
-((10 - 1) %% 9) + 1
-
-11 %% 4
-
-
-i <- ((80 - 1) %% 9) + 1
-j <- ((80 - 1) %/% 9) + 1
-
-
-selected_num <- unique(c(board[1,], board[,1], board[3*((1-1) %/% 3) + 1:3, 3*((1-1) %/% 3) + 1:3]))
-x
-
-possible_answers[selected_num] <- FALSE
-possible_answers
-
-
-if  (0 %in% board) {
-  board[board == 0] <- NA
-} else board
+5/3
+5 %/% 3
+5 %% 3
