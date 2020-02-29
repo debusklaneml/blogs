@@ -1,0 +1,174 @@
+---
+title: RandomCode - sudoku
+author: admin
+date: '2020-02-25'
+slug:  
+categories: [Code]
+tags:
+  - R
+  - RandomCode
+  - Python
+subtitle: ''
+summary: 'An R and Python Sudoku Solver... because why not'
+authors: [M. L. DeBusk-Lane]
+lastmod: '2020-01-04T07:57:09-05:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output: 
+  html_document:
+    theme: journal
+    highlight: zenburn
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE, warning = FALSE, message = FALSE, 
+                      echo = TRUE, dpi = 300, cache.lazy = FALSE,
+                      fig.width = 8, fig.height = 7)
+knitr::knit_engines$set(python = reticulate::eng_python)
+```
+
+Today's random code excursion is modeled after some of the fairly interesting [hackerrank](www.hackerrank.com) things I've been through while trying to both step up and hold on to my Python game... as I use R daily. 
+
+This was a fun one to learn some new function attributes and some `infix` functions. Let's get after it!
+
+```{r, message=FALSE}
+library(tidyverse)
+library(reticulate)
+use_python("~/Users/morganldebusk-lane/miniconda3/bin/python")
+```
+
+Lets take a rather random sudoku puzzle straight off of [wikipedia](https://en.wikipedia.org/wiki/Sudoku): 
+
+```{r echo=FALSE, fig.align = 'center', fig.link='https://en.wikipedia.org/wiki/Sudoku'}
+knitr::include_graphics("sudoku.png")
+```
+
+First, we must decide on what to do about these blanks. For the first example, I'll simply code them as zeros. 
+
+Lets build the matrix. 
+
+```{python}
+board = [[5,3,0,0,7,0,0,0,0],
+        [6,0,0,1,9,5,0,0,0],
+        [0,9,8,0,0,0,0,6,0],
+        [8,0,0,0,6,0,0,0,3],
+        [4,0,0,8,0,3,0,0,1],
+        [7,0,0,0,2,0,0,0,6],
+        [0,6,0,0,0,0,2,8,0],
+        [0,0,0,4,1,9,0,0,5],
+        [0,0,0,0,8,0,0,7,9]]
+```
+
+Unfortunately, this looks a bit strange if I just print it. 
+
+```{python}
+print(board)
+```
+
+
+```{python}
+import numpy as np
+print(np.matrix(board))
+```
+
+```{python}
+def possible(y, x, n) : 
+    global board # Identify 'grid' as a global variable
+    # Check if the `n` number is at the y,i coordinate
+    for i in range(0,9) :
+        if board[y][i] == n :
+            return False
+    for i in range(0,9) : 
+        if board[i][x] == n :
+            return False
+    x0 = (x//3)*3 #floor divisor - returns the whole number divisor
+    y0 = (y//3)*3
+    # For each cell in the given square, is x0 or y0 = n?
+    for i in range(0,3) :
+        for j in range(0,3) :
+            if board[y0+i][x0+j] == n :
+                return False
+    return True
+
+def solve() :
+    global grid
+    # Find a blank cell in the matrix
+    for y in range(9) :
+        for x in range(9) :
+            if board[y][x] == 0 :
+                for n in range(1,10) :
+                    if possible(y,x,n) :
+                        board[y][x] = n
+                        solve() # Recursion
+                        # If it doesnt work, we make it zero again.
+                        board[y][x] = 0
+                return
+    # No more zeroes, so we print the final matrix out.
+    print(np.matrix(board))
+    # Sometimes there are alternative solutions...
+    input("Do you want more solutions??")
+solve()
+```
+
+
+
+
+Of note here, Python refers to the first column and first row as the 0'ith column or row... which can be confusing at times. Throughout the code you'll notice I use 0-9 or 1-10 to capture cell positions. 
+
+First, lets define some functions that will work in conjunction to solve this thing. 
+
+```{python}
+# def possible(y, x, n) : 
+#     global board # Identify 'grid' as a global variable
+#     # Check if the `n` number is at the y,i coordinate
+#     for i in range(0,9) :
+#         if board[y][i] == n :
+#             return False
+#     for i in range(0,9) : 
+#         if board[i][x] == n :
+#             return False
+#     x0 = (x//3)*3 #floor divisor - returns the whole number divisor
+#     y0 = (y//3)*3
+#     # For each cell in the given square, is x0 or y0 = n?
+#     for i in range(0,3) :
+#         for j in range(0,3) :
+#             if board[y0+i][x0+j] == n :
+#                 return False
+#     return True
+```
+
+
+This code, as denoted in much of the comments, strives to return the `possible` numbers. For example, lets take a peak with some function test examples. Remember, the top row and the farthest let column are denoted as `0`. 
+
+
+
+Next, `solve` works to recursively iterate through the various spots on the board to determine workable solutions across all cells. Once there are none left to fill, it will return the solved puzzle. 
+
+```{python problemchunk}
+# def solve() :
+#     global grid
+#     # Find a blank cell in the matrix
+#     for y in range(9) :
+#         for x in range(9) :
+#             if board[y][x] == 0 :
+#                 for n in range(1,10) :
+#                     if possible(y,x,n) :
+#                         board[y][x] = n
+#                         solve() # Recursion
+#                         # If it doesnt work, we make it zero again.
+#                         board[y][x] = 0
+#                 return
+#     # No more zeroes, so we print the final matrix out.
+#     print(np.matrix(board))
+#     # Sometimes there are alternative solutions...
+#     input("Do you want more solutions??")
+```
+
+```{python}
+#solve()
+
+```
+
