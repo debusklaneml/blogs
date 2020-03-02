@@ -184,7 +184,7 @@ predict(titanic_rf, train_prepped, type = "prob") %>%
 
 Clearly.... a bit better. 
 
-Let's not look at how well xgboost does. 
+Let's now look at how well xgboost does. 
 
 ```{r}
 titanic_xg <- boost_tree(mode = "classification", trees = 20) %>%
