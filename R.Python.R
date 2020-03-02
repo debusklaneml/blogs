@@ -11,5 +11,5 @@ train <- read_csv("train.csv")
 
 use_python("~/Users/morganldebusk-lane/miniconda3/bin/python")
 
-py_config()
+
 
