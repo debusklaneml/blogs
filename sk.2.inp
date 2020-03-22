@@ -1,0 +1,5 @@
+TITLE: Your title goes here
+DATA: FILE = "sk.2.dat";
+VARIABLE: 
+NAMES = patient_id yoa female infect days deseaced isolated released; 
+MISSING=.;

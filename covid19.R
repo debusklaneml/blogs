@@ -26,9 +26,12 @@ sk.2 <- sk.1 %>%
          infect = if_else(!is.na(infected_by), 1, 0),
          date = as.Date("2020-03-18"),
          days = date - confirmed_date,
+         days = as.numeric(days),
          deseaced = if_else(state == "deceased", 1, 0),
          isolated = if_else(state == "isolated", 1, 0),
-         released = if_else(state == "released", 1, 0))%>%
-  select(-sex, -confirmed_date, -infection_case, -infected_by, -date)
+         released = if_else(state == "released", 1, 0)) %>%
+  select(-sex, -confirmed_date, -infection_case, -infected_by, -date, -state)
          
+library(MplusAutomation)
 
+prepareMplusData(sk.2, "sk.2.dat", inpfile = TRUE)
